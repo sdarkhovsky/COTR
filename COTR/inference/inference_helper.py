@@ -1,5 +1,6 @@
 import warnings
 
+import os
 import cv2
 import numpy as np
 import torch
@@ -16,7 +17,11 @@ THRESHOLD_SPARSE = 0.02
 THRESHOLD_PIXELS_RELATIVE = 0.02
 BASE_ZOOM = 1.0
 THRESHOLD_AREA = 0.02
-LARGE_GPU = True
+
+try:
+    LARGE_GPU = os.environ['LARGE_GPU'] == 'True'
+except:
+    LARGE_GPU = True
 
 
 def find_prediction_loop(arr):
