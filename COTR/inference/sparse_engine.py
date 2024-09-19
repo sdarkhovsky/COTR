@@ -238,6 +238,7 @@ class SparseEngine():
         if queries_a is not None:
             temp_max_corrs = min(temp_max_corrs, queries_a.shape[0])
             queries_a = queries_a.copy()
+        print('computing correspondences img_a to img_b')
         corr_f, idx_f = self.cotr_corr_multiscale(img_a.copy(), img_b.copy(),
                                                   zoom_ins=zoom_ins,
                                                   converge_iters=converge_iters,
@@ -245,6 +246,7 @@ class SparseEngine():
                                                   queries_a=queries_a,
                                                   return_idx=True)
         assert corr_f.shape[0] > 0
+        print('computing correspondences img_b to img_a')        
         corr_b, idx_b = self.cotr_corr_multiscale(img_b.copy(), img_a.copy(),
                                                   zoom_ins=zoom_ins,
                                                   converge_iters=converge_iters,
@@ -252,6 +254,7 @@ class SparseEngine():
                                                   queries_a=corr_f[:, 2:].copy(),
                                                   return_idx=True)
         assert corr_b.shape[0] > 0
+        print('finished computing correspondences')        
         cycle_errors = np.linalg.norm(corr_f[idx_b][:, :2] - corr_b[:, 2:], axis=1)
         order = np.argsort(cycle_errors)
         out = [corr_f[idx_b][order][:max_corrs]]
