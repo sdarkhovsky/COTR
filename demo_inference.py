@@ -21,7 +21,6 @@ from COTR.inference.sparse_engine import SparseEngine
 utils.fix_randomness(0)
 torch.set_grad_enabled(False)
 
-
 def main(opt):
     model = build_model(opt)
     model = model.cuda()
@@ -60,10 +59,8 @@ def main(opt):
 
     utils.visualize_corrs(img_a, img_b, corrs)
     print(f'spent {t1-t0} seconds for {opt.max_corrs} correspondences.')
-    dense = triangulate_corr(corrs, img_a.shape, img_b.shape)
-    warped = cv2.remap(img_b, dense[..., 0].astype(np.float32), dense[..., 1].astype(np.float32), interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    plt.imshow(warped / 255 * 0.5 + img_a / 255 * 0.5)
-    plt.show()
+
+    utils.visualize_depth(opt, corrs=corrs)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -87,4 +84,5 @@ if __name__ == "__main__":
     if opt.load_weights:
         opt.load_weights_path = os.path.join(opt.out_dir, opt.load_weights, 'checkpoint.pth.tar')
     print_opt(opt)
+
     main(opt)

@@ -269,3 +269,50 @@ def visualize_corrs(img1, img2, corrs, mask=None):
     ax = plt.gca()
     ax.set_axis_off()
     plt.show()
+
+def depth_from_correspondences(R, K, C, corrs):
+    Kinv = np.linalg.inv(K)
+    Rinv = np.linalg.inv(R)
+    ones = np.full((corrs.shape[0],1),1)
+    x1 = np.concatenate((corrs[:,0:2],ones),axis=1)
+    x2 = np.concatenate((corrs[:,2:],ones),axis=1)    
+    a = np.matmul(Kinv,x1.transpose()).transpose()
+    b = np.matmul( np.matmul(Rinv,Kinv), x2.transpose()).transpose()
+    c = np.matmul(Rinv, C)
+
+    depths = np.zeros((corrs.shape[0],2))
+
+    for i in range(corrs.shape[0]):
+        A = np.array([[np.inner(b[i],b[i]), 
+            -np.inner(b[i],a[i])],[-np.inner(a[i],b[i]),np.inner(a[i],a[i])]])
+        B = np.array([np.inner(b[i],c), -np.inner(a[i],c)])
+        depths[i] = np.linalg.solve(A,B)
+    return depths
+
+def visualize_depth(opt, corrs):
+    R = np.identity(3)
+    fx = 1.0
+    fy = 1.0
+    cx = 0.0
+    cy = 0.0
+
+    K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
+    C = [-0.1,0,0]
+    depths = depth_from_correspondences(R, K, C, corrs)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    xs = corrs[:,0]*depths[:,0]
+    ys = corrs[:,1]*depths[:,0]
+    zs = depths[:,0]
+    m = 'o'
+    ax.scatter(xs, ys, zs, marker=m)
+
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
+    plt.show()
+
+    return
