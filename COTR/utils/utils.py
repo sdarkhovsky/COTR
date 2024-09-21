@@ -286,26 +286,34 @@ def depth_from_correspondences(R, K, C, corrs):
         A = np.array([[np.inner(b[i],b[i]), 
             -np.inner(b[i],a[i])],[-np.inner(a[i],b[i]),np.inner(a[i],a[i])]])
         B = np.array([np.inner(b[i],c), -np.inner(a[i],c)])
-        depths[i] = np.linalg.solve(A,B)
+        depths[i] = 1/np.linalg.solve(A,B)
     return depths
 
-def visualize_depth(opt, corrs):
-    R = np.identity(3)
-    fx = 1.0
-    fy = 1.0
-    cx = 0.0
-    cy = 0.0
+def visualize_depth(corrs,fx,fy,cx,cy,baseline):
+    #R = np.identity(3)
+    teta_z = np.pi/180.0*15.0
+    teta_z = 0
+
+    R = np.array([[np.cos(teta_z),-np.sin(teta_z), 0], 
+                  [np.sin(teta_z), np.cos(teta_z), 0],
+                  [0,              0,              1]])
 
     K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
-    C = [-0.1,0,0]
+    Kinv = np.linalg.inv(K)    
+
+    C = [-baseline,0,0]
     depths = depth_from_correspondences(R, K, C, corrs)
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
-    xs = corrs[:,0]*depths[:,0]
-    ys = corrs[:,1]*depths[:,0]
-    zs = depths[:,0]
+    ones = np.full((corrs.shape[0],1),1)
+    x1 = np.concatenate((corrs[:,0:2],ones),axis=1)
+    X = np.matmul(Kinv,x1.transpose())
+
+    xs = X[0,:]
+    ys = X[1,:]
+    zs = X[2,:]
     m = 'o'
     ax.scatter(xs, ys, zs, marker=m)
 

@@ -60,8 +60,6 @@ def main(opt):
     utils.visualize_corrs(img_a, img_b, corrs)
     print(f'spent {t1-t0} seconds for {opt.max_corrs} correspondences.')
 
-    utils.visualize_depth(opt, corrs=corrs)
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     set_COTR_arguments(parser)
