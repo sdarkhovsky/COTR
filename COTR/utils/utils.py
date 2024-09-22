@@ -283,15 +283,36 @@ def depth_from_correspondences(R, K, C, corrs):
     depths = np.zeros((corrs.shape[0],2))
 
     for i in range(corrs.shape[0]):
-        A = np.array([[np.inner(b[i],b[i]), 
-            -np.inner(b[i],a[i])],[-np.inner(a[i],b[i]),np.inner(a[i],a[i])]])
-        B = np.array([np.inner(b[i],c), -np.inner(a[i],c)])
-        depths[i] = 1/np.linalg.solve(A,B)
+        A = np.array([[np.inner(a[i],a[i]), 
+            -np.inner(a[i],b[i])],[np.inner(b[i],a[i]),-np.inner(b[i],b[i])]])
+        B = np.array([-np.inner(a[i],c), -np.inner(b[i],c)])
+        depths[i] = np.linalg.solve(A,B)
     return depths
+
+def points_from_correspondence(corrs,fx,fy,cx,cy,baseline):
+    #R = np.identity(3)
+    #teta_z = np.pi/180.0*15.0
+    teta_z = 0
+
+    R = np.array([[np.cos(teta_z),-np.sin(teta_z), 0], 
+                  [np.sin(teta_z), np.cos(teta_z), 0],
+                  [0,              0,              1]])
+
+    K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
+    Kinv = np.linalg.inv(K)    
+
+    C = [-baseline,0,0]
+    depths = depth_from_correspondences(R, K, C, corrs)
+
+    ones = np.full((corrs.shape[0],1),1)
+    x1 = np.concatenate((corrs[:,0:2],ones),axis=1)
+    X = depths[:,0]*np.matmul(Kinv,x1.transpose())
+
+    return X
 
 def visualize_depth(corrs,fx,fy,cx,cy,baseline):
     #R = np.identity(3)
-    teta_z = np.pi/180.0*15.0
+    #teta_z = np.pi/180.0*15.0
     teta_z = 0
 
     R = np.array([[np.cos(teta_z),-np.sin(teta_z), 0], 
@@ -309,17 +330,17 @@ def visualize_depth(corrs,fx,fy,cx,cy,baseline):
 
     ones = np.full((corrs.shape[0],1),1)
     x1 = np.concatenate((corrs[:,0:2],ones),axis=1)
-    X = np.matmul(Kinv,x1.transpose())
+    X = depths[:,0]*np.matmul(Kinv,x1.transpose())
 
     xs = X[0,:]
-    ys = X[1,:]
-    zs = X[2,:]
+    ys = X[2,:]
+    zs = X[1,:]
     m = 'o'
     ax.scatter(xs, ys, zs, marker=m)
 
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    ax.set_xlabel('Camera X')
+    ax.set_ylabel('Camera Z')
+    ax.set_zlabel('Camera Y')
 
     plt.show()
 

@@ -8,6 +8,8 @@ import torch
 import imageio
 import matplotlib.pyplot as plt
 
+import open3d as o3d
+
 from COTR.utils import utils, debug_utils
 from COTR.utils import utils, debug_utils
 from COTR.models import build_model
@@ -18,6 +20,26 @@ from COTR.inference.sparse_engine import SparseEngine
 
 utils.fix_randomness(0)
 torch.set_grad_enabled(False)
+
+def visualize_points(X):
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    xs = X[:,0]
+    ys = X[:,2]
+    zs = X[:,1]
+    m = 'o'
+    ax.scatter(xs, ys, zs, marker=m)
+
+    ax.set_xlabel('Camera X')
+    ax.set_ylabel('Camera Z')
+    ax.set_zlabel('Camera Y')
+
+    plt.show()
+
+    return
+
 
 def main(opt):
     opt.correspondences_path = os.path.join(opt.out_dir, opt.correspondences)
@@ -39,13 +61,27 @@ def main(opt):
     # visually found correspondence: (231,52) im0 <-> (221,52) im1
     # corrs = np.array([[231,52,221,52]])
 
-    utils.visualize_depth(corrs, fx, fy, cx, cy, baseline)
+    points = utils.points_from_correspondence(corrs, fx, fy, cx, cy, baseline).transpose()
+    visualize_points(points)
+
+    img_a = imageio.imread(opt.img_a, pilmode='RGB')
+    img_b = imageio.imread(opt.img_b, pilmode='RGB')
+
+    colors = (img_a[tuple(np.floor(corrs[:, :2]).astype(int)[:, ::-1].T)] / 255 + img_b[tuple(np.floor(corrs[:, 2:]).astype(int)[:, ::-1].T)] / 255) / 2
+    colors = np.array(colors)
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points)
+    pcd.colors = o3d.utility.Vector3dVector(colors)
+    o3d.visualization.draw_geometries([pcd])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     set_COTR_arguments(parser)
     parser.add_argument('--correspondences', type=str, default='correspondences.npy', help='file name to output correspondences')
     parser.add_argument('--out_dir', type=str, default=general_config['out'], help='out directory')
+    parser.add_argument('--img_a', type=str, default='./sample_data/imgs/storage_room_2_2l_im0.png', help='img a path')
+    parser.add_argument('--img_b', type=str, default='./sample_data/imgs/storage_room_2_2l_im1.png', help='img b path')
 
     opt = parser.parse_args()
     opt.command = ' '.join(sys.argv)
