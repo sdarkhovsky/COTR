@@ -309,39 +309,3 @@ def points_from_correspondence(corrs,fx,fy,cx,cy,baseline):
     X = depths[:,0]*np.matmul(Kinv,x1.transpose())
 
     return X
-
-def visualize_depth(corrs,fx,fy,cx,cy,baseline):
-    #R = np.identity(3)
-    #teta_z = np.pi/180.0*15.0
-    teta_z = 0
-
-    R = np.array([[np.cos(teta_z),-np.sin(teta_z), 0], 
-                  [np.sin(teta_z), np.cos(teta_z), 0],
-                  [0,              0,              1]])
-
-    K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
-    Kinv = np.linalg.inv(K)    
-
-    C = [-baseline,0,0]
-    depths = depth_from_correspondences(R, K, C, corrs)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-
-    ones = np.full((corrs.shape[0],1),1)
-    x1 = np.concatenate((corrs[:,0:2],ones),axis=1)
-    X = depths[:,0]*np.matmul(Kinv,x1.transpose())
-
-    xs = X[0,:]
-    ys = X[2,:]
-    zs = X[1,:]
-    m = 'o'
-    ax.scatter(xs, ys, zs, marker=m)
-
-    ax.set_xlabel('Camera X')
-    ax.set_ylabel('Camera Z')
-    ax.set_zlabel('Camera Y')
-
-    plt.show()
-
-    return
