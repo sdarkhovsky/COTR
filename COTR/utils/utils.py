@@ -278,14 +278,13 @@ def depth_from_correspondences(R, K, C, corrs):
     x2 = np.concatenate((corrs[:,2:],ones),axis=1)    
     a = np.matmul(Kinv,x1.transpose()).transpose()
     b = np.matmul( np.matmul(Rinv,Kinv), x2.transpose()).transpose()
-    c = np.matmul(Rinv, C)
 
     depths = np.zeros((corrs.shape[0],2))
 
     for i in range(corrs.shape[0]):
         A = np.array([[np.inner(a[i],a[i]), 
             -np.inner(a[i],b[i])],[np.inner(b[i],a[i]),-np.inner(b[i],b[i])]])
-        B = np.array([-np.inner(a[i],c), -np.inner(b[i],c)])
+        B = np.array([np.inner(a[i],C), np.inner(b[i],C)])
         depths[i] = np.linalg.solve(A,B)
     return depths
 
@@ -301,16 +300,15 @@ def points_from_correspondence(corrs,fx,fy,cx,cy,baseline):
     K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
     Kinv = np.linalg.inv(K)    
 
-    C = [baseline,0,0]  #   X_right_cam=R*X_left_cam + C
+    C = [baseline,0,0]  #   X_right_cam=R*(X_left_cam - C)
                         #   3d point X
                         #   *
                         #     y|            y|
                         #   ___|/ z       ___|/ z
                         #   x             x
                         #   left camera   right camera (case R=I)
-                        #   If X=(X1,X2,X3) in the left camera coordinate system, then
-                        #   X'=(X1+baseline,X2,X3) in the right camera coordinate system
-                        #   with baseline > 0
+                        #   C is the coordinate of the left camera center
+                        #   in the right camera camera coordinate system
     depths = depth_from_correspondences(R, K, C, corrs)
 
     ones = np.full((corrs.shape[0],1),1)
