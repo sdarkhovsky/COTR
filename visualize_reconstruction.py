@@ -27,14 +27,14 @@ def visualize_points(X):
     ax = fig.add_subplot(projection='3d')
 
     xs = X[:,0]
-    ys = X[:,2]
-    zs = X[:,1]
+    ys = X[:,1]
+    zs = X[:,2]
     m = 'o'
     ax.scatter(xs, ys, zs, marker=m)
 
     ax.set_xlabel('Camera X')
-    ax.set_ylabel('Camera Z')
-    ax.set_zlabel('Camera Y')
+    ax.set_ylabel('Camera Y')
+    ax.set_zlabel('Camera Z')
 
     plt.show()
 
@@ -57,6 +57,9 @@ def main(opt):
     # baseline=59.9696 in calib.txt
     # but difference between TX for img0 and img1 is 4.63527-4.5753=0.05997 in images.txt
     # which one should be used?
+    # 59.9696 is probably baseline in pixels, 0.05997 is the baseline in meters.
+    # In our derivations the baseline is used in C in the transformation RX+C between
+    # camera cooridnate systems, where X and C are in meters. So we use the value in meters.
     baseline=0.05997
     # visually found correspondence: (231,52) im0 <-> (221,52) im1
     # corrs = np.array([[231,52,221,52]])

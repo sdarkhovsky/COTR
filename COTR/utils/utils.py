@@ -301,7 +301,16 @@ def points_from_correspondence(corrs,fx,fy,cx,cy,baseline):
     K = [[fx,0,cx],[0,fy,cy],[0,0,1]]
     Kinv = np.linalg.inv(K)    
 
-    C = [-baseline,0,0]
+    C = [baseline,0,0]  #   X_right_cam=R*X_left_cam + C
+                        #   3d point X
+                        #   *
+                        #     y|            y|
+                        #   ___|/ z       ___|/ z
+                        #   x             x
+                        #   left camera   right camera (case R=I)
+                        #   If X=(X1,X2,X3) in the left camera coordinate system, then
+                        #   X'=(X1+baseline,X2,X3) in the right camera coordinate system
+                        #   with baseline > 0
     depths = depth_from_correspondences(R, K, C, corrs)
 
     ones = np.full((corrs.shape[0],1),1)
